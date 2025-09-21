@@ -187,7 +187,8 @@
             daytimelineIcon.setAttribute("src", icon);
             daytimeline.textContent = ` temperature: ${nthdayTemperature}C   time:${time} to ${time+1}`;
             console.log(nthdayTemperature);
-            daytimeline.classList.add("timeline", "theme");
+            daytimeline.classList.add("timeline");
+            daytimeline.classList.add("theme");
             document.body.appendChild(daytimeline);
         
             daytimeline.appendChild(daytimelineIcon);
