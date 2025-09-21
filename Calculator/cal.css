@@ -1,0 +1,60 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background-color: teal;
+  font-size: 1.5rem;
+}
+.calc {
+  background-color: rgb(53, 52, 52);
+  border: 5px solid;
+  margin: 3rem auto;
+  width: 36%;
+  height: 750px;
+  display: grid;
+  grid-template-rows: 1fr 4fr;
+}
+.display {
+  color: rgb(253, 252, 252);
+  font-size: 1.8rem;
+  border: 2px solid black;
+  border-radius: 5px;
+  background-color: rgb(61, 53, 53);
+  display: block;
+  grid-row: 1/1;
+}
+
+.calButtons {
+  border: 2px solid black;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+}
+.calButtons button {
+  font-size: 1.5rem;
+}
+.calButtons button:hover {
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform: translate3d(0, -3px, 0);
+}
+.calButtons button.org:hover {
+  background-color: orange;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform: translate3d(0, -3px, 0);
+}
+.calButtons button:first-child {
+  grid-row: 1/1;
+  grid-column: 1/3;
+}
+.o {
+  grid-column: 1/4;
+}
+.org {
+  background-color: rgb(244, 143, 71);
+}
