@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather</title>
+    <link rel="stylesheet" href="weather.css">
+</head>
+
+<body>
+    <div class="temp-display  weather-theme"> <!--block that for all the elements-->
+        <div class="weather-temp">
+            <h3 class="real-temperature"></h3>
+            <img class="icon">
+        </div>
+        <span class="locationShown">location</span> <!--entry of location -->
+        <input id="location" type="text" required> <!--Input location Field-->
+        <div class="weatherBlock">
+            <button class="weatherBtn">submit</button><!--weather fetch button -->
+        </div>
+    </div>
+    <div>
+        <div class="days">
+           
+        </div>
+        <div class="hourlyWeather scroller">
+
+        </div>
+    </div>
+</body>
+<script type="module">
+    const temp = document.querySelector(".temp-display"); //main block constant
+    let fetchedata = {}; //for storing realtime weather api data
+    const weatherTemp = document.querySelector(".weather-temp"); //block to show weather
+    const submitButton = document.querySelector(".weatherBtn"); // for adding event-listner on weather-button
+    let city = document.getElementById("location"); //to store location
+
+
+    //object storing weathercode cooresponding to weather condition + icon + theme 
+    const weatherCodeObject = {
+        0: "Unknown",
+        1000: ["Clear", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/10000_clear_large.png", "theme-clear"],
+        1100: ["Mostly_Clear", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/11000_mostly_clear_large.png", "theme-clear"],
+        1101: ["Partly Cloudy", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/11010_partly_cloudy_large.png", "theme-cloudy"],
+        1102: ["Mostly Cloudy", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/11020_mostly_cloudy_large.png", "theme-cloudy"],
+        1001: ["Cloudy", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/10010_cloudy_large.png", "theme-cloudy"],
+        2000: ["Fog", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/20000_fog_large.png", "theme-fog"],
+        2100: ["Light Fog", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/21000_fog_light_large.png", "theme-fog"],
+        4000: ["Drizzle", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/40000_drizzle_large.png", "theme-rain"],
+        4001: ["Rain", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/40010_rain_large.png", "theme-rain"],
+        4200: ["Light Rain", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/42000_rain_light_large.png", "theme-rain"],
+        4201: ["Heavy Rain", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/42010_rain_heavy_large.png", "theme-rain"],
+        5000: ["Snow", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/50000_snow_large.png", "theme-snow"],
+        5001: ["Flurries", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/50010_flurries_large.png", "theme-snow"],
+        5100: ["Light Snow", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/51000_snow_light_large.png", "theme-snow"],
+        5101: ["Heavy Snow", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/51010_snow_heavy_large.png", "theme-snow"],
+        6000: ["freezing_drizzle", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/60000_freezing_rain_drizzle_large.png", "theme-freezing"],
+        6001: ["Freezing Rain", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/60010_freezing_rain_large.png", "theme-freezing"],
+        6200: ["Light Freezing Rain", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/62000_freezing_rain_light_large.png", "theme-freezing"],
+        6201: ["Heavy Freezing Rain", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/62010_freezing_rain_heavy_large.png", "theme-freezing"],
+        7000: ["Ice Pellets", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/70000_ice_pellets_large.png", "theme-snow"],
+        7101: ["Heavy Ice Pellets", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/71010_ice_pellets_heavy_large.png", "theme-snow"],
+        7102: ["Light Ice Pellets", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/71020_ice_pellets_light_large.png", "theme-snow"],
+        8000: ["Thunderstorm", "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/80000_tstorm_large.png", "theme-thunderstorm"]
+    };
+
+
+    // fetch('https://api.tomorrow.io/v4/weather/forecast?location=new%20york&apikey=hnS2aG4SelyhkGjSLduqlwSriNZfyrpH', options)
+
+    const options = {
+        method: 'GET',
+        headers: { accept: 'application/json', 'accept-encoding': 'deflate, gzip, br' }
+    };
+
+    //Real time weather api call 
+    async function weatherapi(location) {
+        let timesteps = `1h`;
+        let realtimeWeatherUrl = `https://api.tomorrow.io/v4/weather/realtime?location=${location}&apikey=hnS2aG4SelyhkGjSLduqlwSriNZfyrpH`;
+        const cacheKey = `weather-${location.toLowerCase()}`; // to store location with prefix weather-<location>
+        const cached = localStorage.getItem(cacheKey); // get the stringed formed information stored in localstorage using cacheKey 
+
+        // to checked id the location used within 1 hr then it will re directly accessed from localstorage
+        if (cached) {
+            const data = JSON.parse(cached);  //convert the stringified value of cached to json form
+            if (Date.now() - data.timestamp < 10 * 60 * 1000) // check if the data is within timestamp or not
+            {
+                console.log("using cached data:", data); //print data in console to show data fetched
+                return data.weather;  //return the weather from data
+            }
+        }
+        try {
+            console.log("its tryingg bro ");
+            let realtimeResponse = await fetch(realtimeWeatherUrl, options);  //calling api 
+            if (!realtimeResponse.ok) {
+                throw new Error("API request failed");
+            }
+            const fetchedata = (await realtimeResponse.json());
+            console.log("fetched data =", fetchedata); //debugging
+            localStorage.setItem(
+                cacheKey, //key which will used to fetched data from local storage
+                JSON.stringify({  // convert the json to string in order to sore it in localstorage
+                    weather: fetchedata,  //stores fetched data
+                    timestamp: Date.now()  //to store the date 
+                })
+            );
+            return fetchedata; // returns the fetched data
+        }
+        catch (error) {
+            console.error(err);
+        }
+    }
+
+    //for day weather or weather forecasting
+    async function weather(location) {
+        let timesteps = `1h`;
+        const url = `https://api.tomorrow.io/v4/weather/forecast?location=${location}&timesteps=${timesteps}&apikey=hnS2aG4SelyhkGjSLduqlwSriNZfyrpH`;
+        const cachekey = `weathertimeline-${location}`;
+        const cached = localStorage.getItem(cachekey);
+        if (cached) {
+            const data = JSON.parse(cached);
+            if ((Date.now() - data.timestamp) < 1 * 60 * 60 * 100) {
+                console.log(" cache weatherForecast", data);
+                return data.weather;
+            }
+        }
+        const options = {
+            method: 'GET',
+            headers: { accept: 'application/json', 'accept-encoding': 'deflate, gzip, br' }
+        };
+        try {
+            let response = await fetch(url, options);
+            if (!response) {
+                throw new Error("api not found");
+            }
+            let fetchedata = await (response.json());
+            console.log("weather forecast =", fetchedata);
+            localStorage.setItem(
+                cachekey,
+                JSON.stringify({
+                    weather: fetchedata,
+                    timestamp: Date.now()
+                })
+            )
+            return fetchedata;
+        }
+        catch (error) {
+            console.error(error);
+        }
+    }
+
+    function weatherIcon(fetchedata) {
+        let realWeatherCode = fetchedata.data.values.weatherCode; // get the weather code
+        realWeatherCode = (weatherCodeObject[realWeatherCode]); //update realweathercode with the the value stored in weatherobjectcode value using above weather code
+        let iconUrl = realWeatherCode[1]; //url of weather icon 
+        let temperature = fetchedata.data.values.temperature;
+        let theme = realWeatherCode[2]; //theme of weather
+        const icon = document.querySelector(".icon");
+        icon.setAttribute("src", iconUrl); //adding src attribute to the img(weather icon)
+        const realTemperature = document.querySelector(".real-temperature");
+        realTemperature.textContent = `Temperature :-  ${temperature}`;
+        document.body.classList.add(theme); //add css properties depending upon the theme
+    }
+
+    //weather forecast
+    function displayForecast(fetchedata) {
+        let fetchedDate = new Date(fetchedata.timelines.hourly[0].time);
+        let currentDate = new Date();
+        console.log(fetchedDate.getHours());
+        console.log(String(currentDate.getHours()));
+        console.log(String(fetchedDate.getHours()) == String(currentDate.getHours()));
+        const currentWeatherTimeline = document.getElementsByClassName("days");
+        let i = (String(fetchedDate.getHours()) == String(currentDate.getHours())) ? 0 : 1;
+        for (i; i <= (24 - parseInt(currentDate.getHours())); i++) {
+            let nthdayTemperature = String(fetchedata.timelines.hourly[i].values.temperature);
+            let nthweathercode = weatherCodeObject[parseInt(fetchedata.timelines.hourly[i].values.weatherCode)];
+            let time = new Date(fetchedata.timelines.hourly[i].time);
+            time = time.getHours();
+            console.log("nthtemp , nthweathercode", nthdayTemperature, nthweathercode);
+            let theme = nthweathercode[2];
+            let icon = nthweathercode[1];
+            console.log(theme, icon);
+            const daytimeline = document.createElement("div");
+            daytimeline.id = `today${i}`;
+            const daytimelineIcon = document.createElement("img");
+            daytimelineIcon.id = `todayimg${i}`;
+            daytimelineIcon.setAttribute("src", icon);
+            daytimeline.textContent = `${nthdayTemperature} time:${time}`;
+            console.log(nthdayTemperature);
+            daytimeline.classList.add("timeline", "theme");
+            document.body.appendChild(daytimeline);
+        
+            daytimeline.appendChild(daytimelineIcon);
+        }
+
+
+    }
+
+
+
+
+
+    submitButton.addEventListener("click", async (event) => {  //arrow fundtion to call WeatherIcon as well as Weather api
+        let location = city.value ? city.value : "mathura"; //ternary exp for the location
+        console.log(`location = ${location}`);  // for debugging
+        weatherIcon(await weatherapi(location)); // function call
+        displayForecast(await weather(location));
+    });
+
+</script>
+
+</html>
