@@ -5,6 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather</title>
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <script src="https://kit.fontawesome.com/81699a330d.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="weather.css">
 </head>
 
@@ -16,6 +22,16 @@
         </div>
         <span class="locationShown">location</span> <!--entry of location -->
         <input id="location" type="text" required> <!--Input location Field-->
+         <div class="weatherAdvisories">
+            <span>Weather Advisories</span>
+            <i class="fas fa-camera"></i>
+            <ul class="weatherAdvisories list">
+                <li class="list Humidity"><i class="fa-solid fa-droplet"></i>Humidity</li>
+                <li class="list Wind"><i class="fa-solid fa-wind"></i>Wind</li>
+                <li class="list Visibility"><i class="fa-regular fa-eye"></i>Visibility</li>
+                <li class="list Rain"><i class="fa-solid fa-cloud-showers-heavy"></i>Rain</li>
+            </ul>
+        </div>
         <div class="weatherBlock">
             <button class="weatherBtn">submit</button><!--weather fetch button -->
         </div>
@@ -187,8 +203,8 @@
             daytimelineIcon.setAttribute("src", icon);
             daytimeline.textContent = ` temperature: ${nthdayTemperature}C   time:${time} to ${time+1}`;
             console.log(nthdayTemperature);
-            daytimeline.classList.add("timeline");
-            daytimeline.classList.add("theme");
+            daytimeline.classList.add("csstimeline");
+            daytimeline.classList.add(`${theme}`);
             document.body.appendChild(daytimeline);
         
             daytimeline.appendChild(daytimelineIcon);

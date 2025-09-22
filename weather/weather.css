@@ -114,9 +114,32 @@ body {
   border: 2px solid black;
 }
 
-.timeline {
+.csstimeline {
   display: flex;
   width: auto;
   height: auto;
   border: 1px solid black;
+}
+.weatherAdvisories{
+  display:block;
+  margin: auto auto;
+  border: 1px solid black;
+  padding:2px;
+  height: max-content;
+  
+}
+.weatherAdvisories .list{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content: space-evenly;
+  list-style: none;
+}
+.weatherAdvisories .list > li{
+  border-bottom: solid 2px darkcyan;
+  justify-items: center;
+}
+li i{
+ width: auto;
+ height:auto;
+ margin-right: 1px;
 }
