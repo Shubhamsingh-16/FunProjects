@@ -11,8 +11,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="weather.css">
-    <!-- config.js is gitignored — holds your real API key locally -->
-    <script src="config.js"></script>
 </head>
 
 <body>
@@ -98,9 +96,8 @@
     </div>
 
 <script>
-    // ── API Key (loaded from config.js — never hardcoded here) ──────────────
-    const API_KEY = (typeof CONFIG !== 'undefined') ? CONFIG.WEATHER_API_KEY : "";
-    if (!API_KEY) console.warn("⚠️ No API key found. Create weather/config.js from config.example.js");
+    // ── API Key ───────────────────────────────────────────────────────────
+    const API_KEY = "hnS2aG4SelyhkGjSLduqlwSriNZfyrpH";
 
     // ── DOM References ────────────────────────────────────────────────────
     const submitBtn    = document.getElementById("submitBtn");
