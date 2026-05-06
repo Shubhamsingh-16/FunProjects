@@ -1,0 +1,11 @@
+# ── API Keys & Secrets ─────────────────────────────────────
+# Real config files with API keys — NEVER commit these
+weather/config.js
+
+# ── Editor & OS ────────────────────────────────────────────
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ── Logs ───────────────────────────────────────────────────
+*.log

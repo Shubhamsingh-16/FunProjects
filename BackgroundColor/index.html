@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BG_Color_Change</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            transition: background 2s ease-in-out;
+            height: 100vh;
+        }
+
+        div {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+        }
+
+        .btnBgChange {
+            margin-top: 1rem;
+            background-color: rgb(18, 144, 107);
+            cursor: pointer;
+            font-size: 1.5rem;
+            border: 1px solid black;
+            border-radius: 5px;
+            transition: background-color 0.2s, transform 0.2s ease-in-out;
+        }
+
+        .btnBgChange:hover {
+            background-color: #4ba59b;
+            transform: scale(1.1);
+        }
+
+        .btnBgChange:focus-visible {
+            outline: 3px solid #3498db;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <button class="btnBgChange">Background Color</button>
+    </div>
+</body>
+<script>
+
+    const colors = [
+        "linear-gradient(90deg, #ff7e5f 0%, #ff9f6d 50%, #feb47b 100%)",
+        "linear-gradient(90deg, #1a2980 0%, #1c73a3 50%, #26d0ce 100%)",
+        "linear-gradient(135deg, #f093fb 0%, #f8256c 50%, #f5576c 100%)",
+        "linear-gradient(90deg, #d4af37 0%, #efda80 50%, #fff1a8 100%)",
+        "linear-gradient(90deg, #000428 0%, #002a60 50%, #004e92 100%)",
+        "linear-gradient(90deg, #a8edea 0%, #dceae8 50%, #fed6e3 100%)",
+        "linear-gradient(90deg, #6a3093 0%, #8834c0 50%, #a044ff 100%)",
+        "linear-gradient(90deg, #bdc3c7 0%, #8a969f 50%, #2c3e50 100%)",
+        "linear-gradient(90deg, red 0%, yellow 25%, green 50%, blue 75%, violet 100%)",
+        "linear-gradient(90deg, #556270 0%, #ff6b6b 50%, #4ecdc4 100%)"
+    ];
+    const button = document.querySelector(".btnBgChange");
+    const body = document.querySelector("body");
+    let currentColor = null;
+    let timeId = null;
+
+    const changedColor = (color) => {
+        body.style.background = color;
+        body.style.transition = "background 2s ease-in-out"
+    }
+
+    function randomBgcolor() {
+        let colorIndex = (Math.floor(Math.random() * (colors.length)));
+        if (colors[colorIndex] == currentColor) {
+            randomBgcolor(colors, currentColor);
+        }
+        currentColor = colors[colorIndex];
+        changedColor(currentColor);
+        timeId = setTimeout(() => { randomBgcolor() }, 4000);
+        return colors[colorIndex];
+    }
+
+    button.addEventListener("click", () => {
+        clearTimeout(timeId);
+        randomBgcolor();
+    })
+    randomBgcolor();
+</script>
+
+</html>

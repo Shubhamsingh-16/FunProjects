@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <meta name="description" content="Beautiful real-time weather app with hourly forecasts powered by Tomorrow.io">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="weather.css">
+    <!-- config.js is gitignored — holds your real API key locally -->
+    <script src="config.js"></script>
+</head>
+
+<body>
+    <!-- Search Section -->
+    <div class="app-container">
+        <div class="search-card">
+            <div class="app-title">
+                <i class="fa-solid fa-cloud-sun"></i>
+                <h1>WeatherNow</h1>
+            </div>
+            <div class="search-bar">
+                <i class="fa-solid fa-location-dot search-icon"></i>
+                <input id="location" type="text" placeholder="Search city..." autocomplete="off">
+                <button id="submitBtn" class="weatherBtn" aria-label="Get weather">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </div>
+            <p class="hint">Press Enter or click search to get weather</p>
+        </div>
+
+        <!-- Current Weather Card -->
+        <div class="weather-card" id="weatherCard" style="display:none;">
+            <div class="weather-main">
+                <div class="weather-left">
+                    <div class="location-name" id="locationName">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <span id="cityName">--</span>
+                    </div>
+                    <div class="temp-display">
+                        <span id="temperatureValue" class="temp-value">--</span>
+                        <span class="temp-unit">°C</span>
+                    </div>
+                    <div class="weather-condition" id="weatherCondition">--</div>
+                    <div class="feels-like" id="feelsLike">Feels like --°C</div>
+                </div>
+                <div class="weather-right">
+                    <img class="weather-icon" id="weatherIcon" src="" alt="Weather condition icon">
+                </div>
+            </div>
+
+            <!-- Advisory Stats -->
+            <div class="advisories-grid">
+                <div class="advisory-item" id="humidityItem">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span class="advisory-label">Humidity</span>
+                    <span class="advisory-value" id="humidityValue">--%</span>
+                </div>
+                <div class="advisory-item" id="windItem">
+                    <i class="fa-solid fa-wind"></i>
+                    <span class="advisory-label">Wind</span>
+                    <span class="advisory-value" id="windValue">-- m/s</span>
+                </div>
+                <div class="advisory-item" id="visibilityItem">
+                    <i class="fa-regular fa-eye"></i>
+                    <span class="advisory-label">Visibility</span>
+                    <span class="advisory-value" id="visibilityValue">-- km</span>
+                </div>
+                <div class="advisory-item" id="rainItem">
+                    <i class="fa-solid fa-cloud-showers-heavy"></i>
+                    <span class="advisory-label">Rain Prob.</span>
+                    <span class="advisory-value" id="rainValue">--%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-card" id="errorCard" style="display:none;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <p id="errorMessage">Could not fetch weather data. Please try again.</p>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-card" id="loadingCard" style="display:none;">
+            <div class="spinner"></div>
+            <p>Fetching weather...</p>
+        </div>
+
+        <!-- Hourly Forecast -->
+        <div class="forecast-section" id="forecastSection" style="display:none;">
+            <h2 class="section-title"><i class="fa-solid fa-clock"></i> Today's Forecast</h2>
+            <div class="hourly-scroll" id="hourlyContainer"></div>
+        </div>
+    </div>
+
+<script>
+    // ── API Key (loaded from config.js — never hardcoded here) ──────────────
+    const API_KEY = (typeof CONFIG !== 'undefined') ? CONFIG.WEATHER_API_KEY : "";
+    if (!API_KEY) console.warn("⚠️ No API key found. Create weather/config.js from config.example.js");
+
+    // ── DOM References ────────────────────────────────────────────────────
+    const submitBtn    = document.getElementById("submitBtn");
+    const locationInput = document.getElementById("location");
+    const weatherCard  = document.getElementById("weatherCard");
+    const errorCard    = document.getElementById("errorCard");
+    const errorMessage = document.getElementById("errorMessage");
+    const loadingCard  = document.getElementById("loadingCard");
+    const forecastSection = document.getElementById("forecastSection");
+    const hourlyContainer = document.getElementById("hourlyContainer");
+    const appBody      = document.body;
+
+    // ── Weather Code → [Label, Icon URL, CSS theme] ───────────────────────
+    const weatherCodeObject = {
+        0:    ["Unknown",            "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/10000_clear_large.png", "theme-unknown"],
+        1000: ["Clear",              "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/10000_clear_large.png", "theme-clear"],
+        1100: ["Mostly Clear",       "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/11000_mostly_clear_large.png", "theme-clear"],
+        1101: ["Partly Cloudy",      "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/11010_partly_cloudy_large.png", "theme-cloudy"],
+        1102: ["Mostly Cloudy",      "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/11020_mostly_cloudy_large.png", "theme-cloudy"],
+        1001: ["Cloudy",             "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/10010_cloudy_large.png", "theme-cloudy"],
+        2000: ["Fog",                "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/20000_fog_large.png", "theme-fog"],
+        2100: ["Light Fog",          "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/21000_fog_light_large.png", "theme-fog"],
+        4000: ["Drizzle",            "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/40000_drizzle_large.png", "theme-rain"],
+        4001: ["Rain",               "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/40010_rain_large.png", "theme-rain"],
+        4200: ["Light Rain",         "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/42000_rain_light_large.png", "theme-rain"],
+        4201: ["Heavy Rain",         "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/42010_rain_heavy_large.png", "theme-rain"],
+        5000: ["Snow",               "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/50000_snow_large.png", "theme-snow"],
+        5001: ["Flurries",           "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/50010_flurries_large.png", "theme-snow"],
+        5100: ["Light Snow",         "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/51000_snow_light_large.png", "theme-snow"],
+        5101: ["Heavy Snow",         "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/51010_snow_heavy_large.png", "theme-snow"],
+        6000: ["Freezing Drizzle",   "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/60000_freezing_rain_drizzle_large.png", "theme-freezing"],
+        6001: ["Freezing Rain",      "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/60010_freezing_rain_large.png", "theme-freezing"],
+        6200: ["Light Freezing Rain","https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/62000_freezing_rain_light_large.png", "theme-freezing"],
+        6201: ["Heavy Freezing Rain","https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/62010_freezing_rain_heavy_large.png", "theme-freezing"],
+        7000: ["Ice Pellets",        "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/70000_ice_pellets_large.png", "theme-snow"],
+        7101: ["Heavy Ice Pellets",  "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/71010_ice_pellets_heavy_large.png", "theme-snow"],
+        7102: ["Light Ice Pellets",  "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/71020_ice_pellets_light_large.png", "theme-snow"],
+        8000: ["Thunderstorm",       "https://raw.githubusercontent.com/Tomorrow-IO-API/tomorrow-weather-codes/master/V2_icons/large/png/80000_tstorm_large.png", "theme-thunderstorm"]
+    };
+
+    const fetchOptions = {
+        method: "GET",
+        headers: { accept: "application/json", "accept-encoding": "deflate, gzip, br" }
+    };
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    function showLoading() {
+        loadingCard.style.display = "flex";
+        weatherCard.style.display = "none";
+        errorCard.style.display   = "none";
+        forecastSection.style.display = "none";
+    }
+
+    function hideLoading() {
+        loadingCard.style.display = "none";
+    }
+
+    function showError(msg) {
+        errorMessage.textContent = msg || "Could not fetch weather. Check the city name.";
+        errorCard.style.display  = "flex";
+        weatherCard.style.display = "none";
+        forecastSection.style.display = "none";
+    }
+
+    function applyTheme(theme) {
+        // Remove all existing theme classes from body
+        const themes = ["theme-clear","theme-cloudy","theme-fog","theme-rain",
+                        "theme-snow","theme-freezing","theme-thunderstorm","theme-unknown"];
+        themes.forEach(t => appBody.classList.remove(t));
+        appBody.classList.add(theme);
+    }
+
+    function formatHour(dateStr) {
+        const d = new Date(dateStr);
+        let h = d.getHours();
+        const ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12 || 12;
+        return `${h} ${ampm}`;
+    }
+
+    // ── Realtime weather API (with localStorage cache 10 min) ─────────────
+    async function fetchRealtime(location) {
+        const url      = `https://api.tomorrow.io/v4/weather/realtime?location=${encodeURIComponent(location)}&apikey=${API_KEY}`;
+        const cacheKey = `weather-realtime-${location.toLowerCase().trim()}`;
+        const cached   = localStorage.getItem(cacheKey);
+
+        if (cached) {
+            const data = JSON.parse(cached);
+            if (Date.now() - data.timestamp < 10 * 60 * 1000) {
+                console.log("Realtime: using cache");
+                return data.weather;
+            }
+        }
+
+        const res = await fetch(url, fetchOptions);
+        if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+            throw new Error(errBody.message || `HTTP ${res.status}`);
+        }
+        const json = await res.json();
+        localStorage.setItem(cacheKey, JSON.stringify({ weather: json, timestamp: Date.now() }));
+        return json;
+    }
+
+    // ── Forecast API (hourly, with localStorage cache 1 hr) ──────────────
+    async function fetchForecast(location) {
+        const url      = `https://api.tomorrow.io/v4/weather/forecast?location=${encodeURIComponent(location)}&timesteps=1h&apikey=${API_KEY}`;
+        const cacheKey = `weather-forecast-${location.toLowerCase().trim()}`;
+        const cached   = localStorage.getItem(cacheKey);
+
+        if (cached) {
+            const data = JSON.parse(cached);
+            if (Date.now() - data.timestamp < 60 * 60 * 1000) {
+                console.log("Forecast: using cache");
+                return data.weather;
+            }
+        }
+
+        const res = await fetch(url, fetchOptions);
+        if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+            throw new Error(errBody.message || `HTTP ${res.status}`);
+        }
+        const json = await res.json();
+        localStorage.setItem(cacheKey, JSON.stringify({ weather: json, timestamp: Date.now() }));
+        return json;
+    }
+
+    // ── Render current weather ─────────────────────────────────────────────
+    function renderCurrent(data) {
+        const values = data.data.values;
+        const code   = parseInt(values.weatherCode);
+        const meta   = weatherCodeObject[code] || weatherCodeObject[0];
+
+        // City name from API response
+        const city   = data.location?.name || "Unknown location";
+        document.getElementById("cityName").textContent        = city;
+        document.getElementById("temperatureValue").textContent = Math.round(values.temperature);
+        document.getElementById("weatherCondition").textContent = meta[0];
+        document.getElementById("feelsLike").textContent       = `Feels like ${Math.round(values.temperatureApparent ?? values.temperature)}°C`;
+        document.getElementById("weatherIcon").setAttribute("src", meta[1]);
+        document.getElementById("weatherIcon").setAttribute("alt", meta[0]);
+
+        // Advisories
+        document.getElementById("humidityValue").textContent   = `${Math.round(values.humidity ?? 0)}%`;
+        document.getElementById("windValue").textContent       = `${(values.windSpeed ?? 0).toFixed(1)} m/s`;
+        document.getElementById("visibilityValue").textContent = `${((values.visibility ?? 0) / 1000).toFixed(1)} km`;
+        document.getElementById("rainValue").textContent       = `${Math.round(values.precipitationProbability ?? 0)}%`;
+
+        applyTheme(meta[2]);
+        weatherCard.style.display = "block";
+    }
+
+    // ── Render hourly forecast ────────────────────────────────────────────
+    function renderForecast(data) {
+        hourlyContainer.innerHTML = "";
+        const hourly = data.timelines?.hourly;
+        if (!hourly || hourly.length === 0) return;
+
+        const now = new Date();
+        // Show from the first entry that is >= current hour
+        const startIdx = hourly.findIndex(h => new Date(h.time) >= new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours()));
+        const from = startIdx >= 0 ? startIdx : 0;
+        // Show up to 12 hours
+        const items = hourly.slice(from, from + 12);
+
+        items.forEach((hour, idx) => {
+            const values = hour.values;
+            const code   = parseInt(values.weatherCode);
+            const meta   = weatherCodeObject[code] || weatherCodeObject[0];
+            const label  = idx === 0 ? "Now" : formatHour(hour.time);
+
+            const card = document.createElement("div");
+            card.className = `hourly-card ${meta[2]}`;
+
+            card.innerHTML = `
+                <span class="hourly-time">${label}</span>
+                <img src="${meta[1]}" alt="${meta[0]}" class="hourly-icon">
+                <span class="hourly-temp">${Math.round(values.temperature)}°</span>
+                <span class="hourly-desc">${meta[0]}</span>
+            `;
+            hourlyContainer.appendChild(card);
+        });
+
+        forecastSection.style.display = "block";
+    }
+
+    // ── Main fetch handler ────────────────────────────────────────────────
+    async function getWeather() {
+        const location = locationInput.value.trim() || "Mathura";
+        showLoading();
+
+        try {
+            const [realtimeData, forecastData] = await Promise.all([
+                fetchRealtime(location),
+                fetchForecast(location)
+            ]);
+
+            hideLoading();
+            renderCurrent(realtimeData);
+            renderForecast(forecastData);
+        } catch (error) {
+            console.error("Weather fetch error:", error);
+            hideLoading();
+            showError(error.message || "Failed to fetch weather. Check city name or API quota.");
+        }
+    }
+
+    // ── Event listeners ───────────────────────────────────────────────────
+    submitBtn.addEventListener("click", getWeather);
+
+    locationInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") getWeather();
+    });
+</script>
+</body>
+</html>
