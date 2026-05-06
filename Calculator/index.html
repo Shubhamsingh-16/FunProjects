@@ -1,39 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator</title>
-    <link rel="stylesheet" href="cal.css">
-    <script src="first.js"> </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="cal.css">
 </head>
-
 <body>
-    <container class="calc">
-        <div class="display">
-        </div>
-        <div class="calButtons">
-            <button class="AC" onclick="">AC</button>
-            <button class="X">[x]</button>
-            <button class="org">/</button>
-            <button class="7">7</button>
-            <button class="8">8</button>
-            <button class="9">9</button>
-            <button class="org">X</button>
-            <button class="4">4</button>
-            <button class="5">5</button>
-            <button class="6">6</button>
-            <button class="org">-</button>
-            <button class="1">1</button>
-            <button class="2">2</button>
-            <button class="3">3</button>
-            <button class="org">+</button>
-            <button class="o">0</button>
-            <button class="equal">=</button>
-        </div>
-    </container>
-    <script src="cal.js"></script>
-</body>
 
+  <div class="calc">
+
+    <!-- Display -->
+    <div class="display-wrap">
+      <span class="expr" id="expr"></span>
+      <span class="display" id="display">0</span>
+    </div>
+
+    <!-- Buttons -->
+    <div class="calButtons">
+
+      <!-- Row 1 -->
+      <button class="btn btn-ac"   data-val="AC">AC</button>
+      <button class="btn btn-func" data-val="±">+/-</button>
+      <button class="btn btn-func" data-val="%">%</button>
+      <button class="btn btn-op"   data-val="/">÷</button>
+
+      <!-- Row 2 -->
+      <button class="btn" data-val="7">7</button>
+      <button class="btn" data-val="8">8</button>
+      <button class="btn" data-val="9">9</button>
+      <button class="btn btn-op" data-val="×">×</button>
+
+      <!-- Row 3 -->
+      <button class="btn" data-val="4">4</button>
+      <button class="btn" data-val="5">5</button>
+      <button class="btn" data-val="6">6</button>
+      <button class="btn btn-op" data-val="-">−</button>
+
+      <!-- Row 4 -->
+      <button class="btn" data-val="1">1</button>
+      <button class="btn" data-val="2">2</button>
+      <button class="btn" data-val="3">3</button>
+      <button class="btn btn-op" data-val="+">+</button>
+
+      <!-- Row 5 -->
+      <button class="btn btn-zero" data-val="0">0</button>
+      <button class="btn" data-val=".">.</button>
+      <button class="btn btn-eq"  data-val="=">=</button>
+
+    </div>
+  </div>
+
+  <script src="cal.js"></script>
+</body>
 </html>
